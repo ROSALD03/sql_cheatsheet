@@ -1,0 +1,17 @@
+select 
+DISTINCT "PFZ_CUST_ID",
+"TRX_EXPONENT",
+SUM("TRX_EXPONENT") OVER ( ORDER BY COALESCE("TRX_EXPONENT",0)  ASC ) AS Running_TRX_EXPONENT,
+SUM("TRX_EXPONENT") OVER ( ) AS Total_TRX_EXPONENT,
+ceil(10 * Running_TRX_EXPONENT/ Total_TRX_EXPONENT) as TRX_EXPONENT_DECILE
+from 
+    (Select distinct PFZ_CUST_ID, sum (trx) AS TRX_EXPONENT
+from COMM_US_PUB_PROD_DB.BI_US_RNA.RX_FCT_M a
+where a.pfz_prod_id in 
+(select distinct PFZ_PROD_ID from COMM_US_PUB_PROD_DB.BI_US_RNA.DIM_PROD
+where PROD_NM LIKE '%PAXLOVID%' ) 
+and dt_sk between '20230101' and '20231231'
+    GROUP BY 1)
+
+    GROUP BY 1,2
+    ORDER BY 5 DESC;
